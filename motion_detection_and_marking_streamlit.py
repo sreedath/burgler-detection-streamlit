@@ -4,18 +4,27 @@ import numpy as np
 
 st.title("Motion Detection and Marking")
 
-video_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
+mode = st.radio("Select input source:", ("Webcam", "Upload Video"))
 frame_placeholder = st.empty()
 save_motion = st.checkbox("Save frames with motion", value=False)
 
-if video_file is not None:
-    tfile = open("temp_video.mp4", "wb")
-    tfile.write(video_file.read())
-    tfile.close()
-    cap = cv2.VideoCapture("temp_video.mp4")
+cap = None
+
+if mode == "Upload Video":
+    video_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
+    if video_file is not None:
+        tfile = open("temp_video.mp4", "wb")
+        tfile.write(video_file.read())
+        tfile.close()
+        cap = cv2.VideoCapture("temp_video.mp4")
+elif mode == "Webcam":
+    if st.button("Start Webcam"):
+        cap = cv2.VideoCapture(0)
+
+if cap is not None:
     ret, prev_frame = cap.read()
     if not ret:
-        st.error("Could not read video.")
+        st.error("Could not read video or webcam.")
     else:
         prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
         frame_count = 0
@@ -37,13 +46,4 @@ if video_file is not None:
                 motion_detected = True
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(current_frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-            if motion_detected and save_motion and frame_count % 10 == 0:
-                cv2.imwrite(f"motion_{frame_count}.jpg", current_frame)
-
-            # Convert BGR to RGB for Streamlit display
-            frame_placeholder.image(cv2.cvtColor(current_frame, cv2.COLOR_BGR2RGB), channels="RGB")
-            prev_gray = current_gray
-            frame_count += 1
-
         cap.release()
