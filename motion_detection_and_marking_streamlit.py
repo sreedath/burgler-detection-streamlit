@@ -41,7 +41,7 @@ if cap is not None:
 
             motion_detected = False
             for contour in contours:
-                if cv2.contourArea(contour) < 20:
+                if cv2.contourArea(contour) < min_area:
                     continue
                 motion_detected = True
                 x, y, w, h = cv2.boundingRect(contour)
